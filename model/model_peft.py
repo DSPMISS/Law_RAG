@@ -6,8 +6,6 @@ from peft import LoraConfig, TaskType, get_peft_model,PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForSeq2Seq
 from datasets import load_dataset
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
-
 def process_func(examples):
     MAX_LENGTH = 512
     input_ids, attention_mask, labels = [], [], []
@@ -36,24 +34,25 @@ def process_func(examples):
 
 model = AutoModelForCausalLM.from_pretrained("LiquidAI/LFM2-350M", cache_dir="./LFM2", low_cpu_mem_usage=True)
 tokenizer = AutoTokenizer.from_pretrained("LiquidAI/LFM2-350M", cache_dir="./LFM2")
-datasets = load_dataset("json", data_files="../data/真实场景法律咨询/训练数据_带法律依据_92k.json")
-
-# cache_paths = {
-#     'train': '../data/cache/mrpc_train_processed.arrow',
-#     # 'validation': '../data/cache/mrpc_validation_processed.arrow',
-#     # 'test': '../data/cache/mrpc_test_processed.arrow'
-# }
+datasets = load_dataset("json", data_files="../data/真实场景法律咨询/训练数据_带法律依据_92k.json",encoding='utf-8',)
 
 
-
-tokneized_datasets = datasets.map(
+tokenized_datasets = datasets.map(
     process_func,
     remove_columns=datasets["train"].column_names,
     keep_in_memory=False,
     batched=True,
     batch_size=500,
 )
-tokenized_datasets = tokneized_datasets['train'].train_test_split(
+
+#取1/10的数据训练
+total_size = len(tokenized_datasets['train'])
+subset_size = total_size // 10
+indices = np.random.choice(total_size, subset_size, replace=False)
+tokenized_datasets_subset = tokenized_datasets['train'].select(indices)
+
+#分离训练集和测试集
+tokenized_datasets = tokenized_datasets_subset.train_test_split(
     test_size=0.2,      # 测试集比例 20%
     seed=42,           # 随机种子，确保可重复
     shuffle=True       # 是否打乱数据
@@ -65,7 +64,7 @@ config = LoraConfig(task_type=TaskType.CAUSAL_LM,
 model = get_peft_model(model, config)
 
 # 1. 设置检查点目录
-output_dir = ".lora_ckpts"
+output_dir = "lora_ckpts"
 os.makedirs(output_dir, exist_ok=True)
 
 # 2. 检查是否有已有检查点
@@ -90,9 +89,9 @@ train_args = TrainingArguments(
                                per_device_eval_batch_size=1,       #验证时的batchsize
                                logging_steps=100,                    #log打印频率
                                eval_strategy="steps",               #评估频率
-                               eval_steps=30000,
+                               eval_steps=3000,
                                save_strategy="steps",               #保存频率
-                               save_steps=30000,
+                               save_steps=3000,
                                save_total_limit=2,                   #最大保存数
                                learning_rate=1e-5,                  #lr
                                metric_for_best_model="bleu",    #评估指标
