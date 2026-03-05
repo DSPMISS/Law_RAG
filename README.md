@@ -13,7 +13,7 @@
 ③模拟专业律师回答；将用户咨询问题和相关法律条款输入律师问答模型，生成模拟专业律师口吻的回答。
 该模型基于 [LiquidAI/LFM2-350M](https://huggingface.co/LiquidAI/LFM2-350M) 经过Lora微调得到。
 
-![img.png](img/img.png)
+![RAG流程图.png](img/RAG%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
 
 ## 开始
 ### 配置环境依赖
