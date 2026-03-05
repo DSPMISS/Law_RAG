@@ -4,7 +4,7 @@
 ## 致谢
 本项目真实场景法律咨询数据来自 [LAW_GPT](https://github.com/LiuHC0428/LAW_GPT) 项目，相关法律条款来自 [中华人民共和国法律手册](https://github.com/LawRefBook/Laws) 项目，特此感谢 Hongcheng Liu, Yusheng Liao, Yutong Meng, Yuhao Wang 等作者的开源工作。
 ## 项目架构
-系统整体架构思路分文三个步骤：
+本系统基于Langchain v1.0搭建流水线，整体架构思路分文三个步骤：
 
 ①初步解释；将客户问题给予Qwen2.5-7B，得到初步回答。这一步可以解决由于客户咨询问题过于模糊导致的chromadb相似度匹配准确度过低的问题。
 
